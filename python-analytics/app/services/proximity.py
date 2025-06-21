@@ -1,6 +1,6 @@
 from datetime import timedelta
 from typing import List, Dict
-from src.core.distance import haversine
+from app.services.distance import haversine
 
 def find_proximity_matches(person_a: List[Dict], person_b: List[Dict], max_minutes_diff=5, max_distance_m=50) -> List[Dict]:
     """
