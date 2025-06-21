@@ -19,7 +19,7 @@ venv.bak/
 
 # Analytics/data outputs
 python-analytics/data/
-python-analytics/outputs/
+python-analytics/output/
 python-analytics/.env
 
 # Build and dist folders
