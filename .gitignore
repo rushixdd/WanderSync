@@ -41,6 +41,7 @@ Desktop.ini
 # VS Code settings
 .vscode/
 .history/
+.vs/
 
 # Coverage reports
 coverage/
@@ -52,5 +53,10 @@ coverage/
 tmp/
 temp/
 *.tmp
+
+# C# Visual Studio 2022
+*.suo
+bin/
+obj/ 
 
 # IDE files
