@@ -28,10 +28,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="TestData\" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <None Update="TestData\malformed.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TestData\person_a.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

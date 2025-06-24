@@ -1,5 +1,5 @@
 # src/routers/analyze.py
-from fastapi import APIRouter, UploadFile, Form, Depends
+from fastapi import APIRouter, UploadFile, Form, Depends, status, HTTPException
 from datetime import datetime
 from typing import Optional
 from app.auth.security import verify_api_key
@@ -35,8 +35,20 @@ async def analyze_proximity(
     tmp_b.close()
 
     # Load and process
-    timeline_a = load_and_validate_json(tmp_a.name)
-    timeline_b = load_and_validate_json(tmp_b.name)
+    try:
+        timeline_a = load_and_validate_json(tmp_a.name)
+        timeline_b = load_and_validate_json(tmp_b.name)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid location history file: {str(e)}"
+        )
+    except FileNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"File not found: {str(e)}"
+        )
+
 
     points_a = filter_by_date(parse_timeline_json(timeline_a), date)
     points_b = filter_by_date(parse_timeline_json(timeline_b), date)
