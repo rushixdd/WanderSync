@@ -29,6 +29,10 @@ namespace WanderSync.Api.Controllers
                 var result = await _analyticsService.AnalyzeProximityAsync(request);
                 return Ok(result);
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
             catch (HttpRequestException ex)
             {
                 return StatusCode(502, $"Error communicating with Analytics service: {ex.Message}");

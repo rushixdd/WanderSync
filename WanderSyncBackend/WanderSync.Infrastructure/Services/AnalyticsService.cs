@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using WanderSync.Application.DTOs;
 using WanderSync.Infrastructure.Services.Interfaces;
@@ -31,10 +32,23 @@ namespace WanderSync.Infrastructure.Services
             content.Add(new StringContent(request.NameB), "name_b");
             content.Add(new StringContent(request.Date), "date");
             var response = await _httpClient.PostAsync("analyze", content);
-            response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<AnalyticsResponseDto>();
-            return result ?? throw new InvalidOperationException("Invalid response from Python analytics service.");
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<AnalyticsResponseDto>();
+                return result;
+            }
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new InvalidOperationException($"Analytics service rejected input: {error}");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException("Failed to analyze proximity due to analytics server error.");
+            }
+
         }
     }
 }
