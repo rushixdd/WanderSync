@@ -60,3 +60,4 @@ bin/
 obj/ 
 
 # IDE files
+.idea/
