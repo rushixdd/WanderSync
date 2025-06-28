@@ -22,7 +22,8 @@ const Calendar = (props) => (
 
 // UploadSection component: Contains the form for users to upload files and input details.
 // It uses React.forwardRef to allow the parent component (LandingPage) to scroll to it.
-const UploadSection = React.forwardRef((props, ref) => {
+// Now accepts an onAnalyze prop to trigger the backend analysis.
+const UploadSection = React.forwardRef(({ onAnalyze }, ref) => { // Destructure onAnalyze from props
     const [personAFile, setPersonAFile] = useState(null);
     const [personBFile, setPersonBFile] = useState(null);
     const [personAName, setPersonAName] = useState('');
@@ -30,7 +31,7 @@ const UploadSection = React.forwardRef((props, ref) => {
     const [selectedDate, setSelectedDate] = useState('');
 
     // Handler for the form submission
-    const handleAnalyze = async (e) => {
+    const handleAnalyze = (e) => {
         e.preventDefault();
 
         // Basic client-side validation
@@ -39,31 +40,15 @@ const UploadSection = React.forwardRef((props, ref) => {
             return;
         }
 
-        // In a real application, you would create FormData and send it to your backend
-        // using a service function (e.g., from src/services/proximityService.js).
-        // For now, we'll just log the data and show a dummy alert.
-        console.log({
-            personAFile: personAFile.name,
-            personBFile: personBFile.name,
+        // Call the onAnalyze prop, passing all form data
+        // The App.jsx parent component will then handle the backend call and navigation
+        onAnalyze({
+            personAFile,
+            personBFile,
             personAName,
             personBName,
             selectedDate,
         });
-
-        // Example of calling a hypothetical backend service:
-        // try {
-        //   const result = await proximityService.uploadTimelineData(
-        //     personAFile, personBFile, personAName, personBName, selectedDate
-        //   );
-        //   console.log("Backend analysis result:", result);
-        //   alert("Analysis complete! Check console for results.");
-        //   // You would then display the results on the UI
-        // } catch (error) {
-        //   console.error("Error during analysis:", error);
-        //   alert("Analysis failed. Please try again. " + error.message);
-        // }
-
-        alert("Analysis initiated! (For actual backend integration, see src/services/proximityService.js)");
     };
 
     return (
@@ -71,14 +56,16 @@ const UploadSection = React.forwardRef((props, ref) => {
             <div className="bg-white p-8 rounded-xl shadow-2xl max-w-4xl w-full">
                 <h2 className="text-4xl font-bold text-center text-gray-800 mb-10">Uncover Shared Journeys</h2>
                 <form onSubmit={handleAnalyze} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* This grid container should correctly apply the two-column layout */}
+                    <div className="grid grid-cols-2 md:grid-cols-2 gap-8">
                         {/* Person A Upload Column */}
-                        <div className="flex flex-col space-y-4">
+                        {/* Added min-w-0 to allow the column to shrink if content pushes it */}
+                        <div className="flex flex-col space-y-4 min-w-0">
                             <label htmlFor="fileA" className="block text-xl font-medium text-gray-700">
                                 <UploadCloud className="inline-block mr-2 text-blue-500" />
                                 Upload JSON for Person A
                             </label>
-                            {/* Custom styled file input */}
+                            {/* Custom styled file input - Ensure inner label is w-full */}
                             <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer hover:border-blue-400 transition-colors duration-200">
                                 <input
                                     id="fileA"
@@ -88,6 +75,7 @@ const UploadSection = React.forwardRef((props, ref) => {
                                     accept=".json" // Only accept JSON files
                                     onChange={(e) => setPersonAFile(e.target.files[0])}
                                 />
+                                {/* Added w-full to the inner label to ensure it takes available space */}
                                 <label htmlFor="fileA" className="text-center w-full h-full flex flex-col items-center justify-center cursor-pointer">
                                     <p className="text-sm text-gray-600">
                                         {personAFile ? personAFile.name : "Drag and drop or click to upload"}
@@ -108,12 +96,13 @@ const UploadSection = React.forwardRef((props, ref) => {
                         </div>
 
                         {/* Person B Upload Column */}
-                        <div className="flex flex-col space-y-4">
+                        {/* Added min-w-0 to allow the column to shrink if content pushes it */}
+                        <div className="flex flex-col space-y-4 min-w-0">
                             <label htmlFor="fileB" className="block text-xl font-medium text-gray-700">
                                 <UploadCloud className="inline-block mr-2 text-purple-500" />
                                 Upload JSON for Person B
                             </label>
-                            {/* Custom styled file input */}
+                            {/* Custom styled file input - Ensure inner label is w-full */}
                             <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer hover:border-purple-400 transition-colors duration-200">
                                 <input
                                     id="fileB"
@@ -123,6 +112,7 @@ const UploadSection = React.forwardRef((props, ref) => {
                                     accept=".json"
                                     onChange={(e) => setPersonBFile(e.target.files[0])}
                                 />
+                                {/* Added w-full to the inner label to ensure it takes available space */}
                                 <label htmlFor="fileB" className="text-center w-full h-full flex flex-col items-center justify-center cursor-pointer">
                                     <p className="text-sm text-gray-600">
                                         {personBFile ? personBFile.name : "Drag and drop or click to upload"}

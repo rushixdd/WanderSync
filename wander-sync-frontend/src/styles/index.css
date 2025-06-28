@@ -1,11 +1,10 @@
 /* src/styles/index.css */
 
 /* Import Tailwind CSS directives */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/*@import "tailwindcss/preflight";*/
+@import "tailwindcss";
 
-/* Essential CSS resets for full viewport coverage */
+ Essential CSS resets for full viewport coverage
 html, body {
     height: 100%; /* Ensure html and body take full viewport height */
     margin: 0; /* Remove default browser margin */
@@ -19,6 +18,7 @@ html, body {
     width: 100vw; /* Make sure #root takes the full viewport width */
     display: flex;
     flex-direction: column;
+    padding: 0;
 }
 
 /* Define custom animations here */
