@@ -1,15 +1,12 @@
+// src/components/common/InputField.jsx
 import React from 'react';
 
-// A generic InputField component for reusability.
-// It handles common input attributes and styling.
-const InputField = ({ id, label, type = 'text', placeholder, value, onChange, className = '', ...props }) => {
+const InputField = ({ id, label, type, placeholder, value, onChange, required }) => {
     return (
         <div>
-            {label && (
-                <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-2">
-                    {label}
-                </label>
-            )}
+            <label htmlFor={id} className="block text-lg font-medium text-gray-700 mb-2">
+                {label} {required && <span className="text-red-500">*</span>}
+            </label>
             <input
                 type={type}
                 id={id}
@@ -17,8 +14,8 @@ const InputField = ({ id, label, type = 'text', placeholder, value, onChange, cl
                 placeholder={placeholder}
                 value={value}
                 onChange={onChange}
-                className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${className}`}
-                {...props}
+                required={required}
+                className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-200"
             />
         </div>
     );

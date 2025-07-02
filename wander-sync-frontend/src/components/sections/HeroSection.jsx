@@ -38,7 +38,7 @@ const HeroSection = ({ scrollToRef }) => {
                 </p>
                 {/* Call-to-action button that scrolls the user to the upload form */}
                 <button
-                    onClick={scrollToRef}
+                    onClick={() => scrollToRef.current.scrollIntoView({ behavior: 'smooth' })}
                     className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 animate-fade-in-up delay-600"
                 >
                     Get Started
