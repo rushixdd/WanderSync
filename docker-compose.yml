@@ -1,0 +1,81 @@
+version: "3.9"
+
+services:
+  # === Python Analytics Service ===
+  analytics-dev:
+    container_name: wander-analytics-dev
+    build:
+      context: ./python-analytics/app
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./python-analytics/app:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    profiles: ["dev"]
+    restart: unless-stopped
+
+  analytics-prod:
+    container_name: wander-analytics-prod
+    build:
+      context: ./python-analytics/app
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    profiles: ["prod"]
+    restart: unless-stopped
+
+  # === C# Backend API ===
+  backend-dev:
+    container_name: wander-backend-dev
+    build:
+      context: ./WanderSync.Api
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./WanderSync.Api:/app
+    ports:
+      - "5000:5000"
+    profiles: ["dev"]
+    restart: unless-stopped
+
+  backend-prod:
+    container_name: wander-backend-prod
+    build:
+      context: ./WanderSync.Api
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    profiles: ["prod"]
+    restart: unless-stopped
+
+  # === Frontend ===
+  frontend-dev:
+    container_name: wander-frontend-dev
+    build:
+      context: ./wander-sync-frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:5173"
+    environment:
+      - NODE_ENV=development
+    profiles: ["dev"]
+    restart: unless-stopped
+
+  frontend-prod:
+    container_name: wander-frontend-prod
+    build:
+      context: ./wander-sync-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    profiles: ["prod"]
+    restart: unless-stopped
+
+#docker-compose --profile dev up --build
+#docker-compose --profile prod up --build

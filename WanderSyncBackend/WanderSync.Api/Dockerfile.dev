@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS dev
+WORKDIR /src
+
+# Copy only project files for better caching
+COPY *.sln .
+COPY WanderSync.Api/*.csproj ./WanderSync.Api/
+COPY WanderSync.Application/*.csproj ./WanderSync.Application/
+COPY WanderSync.Domain/*.csproj ./WanderSync.Domain/
+COPY WanderSync.Infrastructure/*.csproj ./WanderSync.Infrastructure/
+RUN dotnet restore
+
+# Copy the rest of the code
+COPY . .
+
+WORKDIR /src/WanderSync.Api
+
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_URLS=http://+:5000
+
+EXPOSE 5000
+
+# Enable hot reload with dotnet watch
+CMD ["dotnet", "watch", "run", "--no-launch-profile"]

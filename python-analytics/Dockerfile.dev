@@ -1,0 +1,24 @@
+# Dockerfile.dev (for local development with live reload)
+FROM python:3.13
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install optional dev tools
+RUN pip install --no-cache-dir watchdog
+
+# Copy everything
+COPY ./app ./app
+
+# Expose for dev server
+EXPOSE 8000
+
+# Enable auto-reload
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+# Build and run commands:
+# docker build -f Dockerfile.dev -t python-analytics-dev .
+# docker run -p 8000:8000 -v $(pwd)/app:/app/app python-analytics-dev

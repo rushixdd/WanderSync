@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  analytics-dev:
+    container_name: analytics_dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+    environment:
+      - ENV=development
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  analytics-prod:
+    container_name: analytics_prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"  # Port 8001 externally, 8000 inside container
+    environment:
+      - ENV=production
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+
+# docker-compose up analytics-dev
+# docker-compose up analytics-prod
