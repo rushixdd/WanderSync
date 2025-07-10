@@ -4,10 +4,10 @@ services:
   frontend-dev:
     container_name: wander-frontend-dev
     build:
-      context: ./wander-sync-frontend
+      context: .
       dockerfile: Dockerfile.dev
     volumes:
-      - ./frontend:/app
+      - .:/app
       - /app/node_modules
     ports:
       - "3000:5173"  # Adjust depending on dev server port
@@ -20,7 +20,7 @@ services:
   frontend-prod:
     container_name: wander-frontend-prod
     build:
-      context: ./frontend
+      context: .
       dockerfile: Dockerfile
     ports:
       - "80:80"

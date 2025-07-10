@@ -6,12 +6,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
+    profiles: [dev]
     ports:
       - "8000:8000"
     volumes:
       - ./app:/app/app
     environment:
       - ENV=development
+    restart: unless-stopped
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   analytics-prod:
@@ -19,10 +21,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    profiles: [prod]
     ports:
       - "8001:8000"  # Port 8001 externally, 8000 inside container
     environment:
       - ENV=production
+    restart: unless-stopped
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 

@@ -30,10 +30,10 @@ services:
   backend-dev:
     container_name: wander-backend-dev
     build:
-      context: ./WanderSync.Api
+      context: ./WanderSyncBackend/WanderSync.Api
       dockerfile: Dockerfile.dev
     volumes:
-      - ./WanderSync.Api:/app
+      - ./WanderSyncBackend/WanderSync.Api:/app
     ports:
       - "5000:5000"
     profiles: ["dev"]
@@ -42,7 +42,7 @@ services:
   backend-prod:
     container_name: wander-backend-prod
     build:
-      context: ./WanderSync.Api
+      context: ./WanderSyncBackend/WanderSync.Api
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
@@ -56,7 +56,7 @@ services:
       context: ./wander-sync-frontend
       dockerfile: Dockerfile.dev
     volumes:
-      - ./frontend:/app
+      - ./wander-sync-frontend:/app
       - /app/node_modules
     ports:
       - "3000:5173"

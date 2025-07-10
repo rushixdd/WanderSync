@@ -2,8 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-COPY . .
+# copy project files for restore layer-caching
+COPY *.sln ./
+COPY WanderSync.*/*.csproj ./WanderSync.*/
 RUN dotnet restore
+# now copy source
+COPY . .
 RUN dotnet publish -c Release -o /out
 
 # --- Stage 2: Runtime ---
