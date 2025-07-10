@@ -1,14 +1,12 @@
-version: "3.9"
-
-services:
+﻿services:
   # === Python Analytics Service ===
   analytics-dev:
     container_name: wander-analytics-dev
     build:
-      context: ./python-analytics/app
+      context: ./python-analytics
       dockerfile: Dockerfile.dev
     volumes:
-      - ./python-analytics/app:/app
+      - ./python-analytics:/app
     ports:
       - "8000:8000"
     environment:
@@ -19,7 +17,7 @@ services:
   analytics-prod:
     container_name: wander-analytics-prod
     build:
-      context: ./python-analytics/app
+      context: ./python-analytics
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
@@ -30,22 +28,32 @@ services:
   backend-dev:
     container_name: wander-backend-dev
     build:
-      context: ./WanderSyncBackend/WanderSync.Api
+      context: ./WanderSyncBackend         
       dockerfile: Dockerfile.dev
     volumes:
-      - ./WanderSyncBackend/WanderSync.Api:/app
+      - ./WanderSyncBackend/WanderSync.Api:/src/WanderSync.Api
+      - ./WanderSyncBackend/WanderSync.Application:/src/WanderSync.Application
+      - ./WanderSyncBackend/WanderSync.Domain:/src/WanderSync.Domain
+      - ./WanderSyncBackend/WanderSync.Infrastructure:/src/WanderSync.Infrastructure
+      - ./WanderSyncBackend/WanderSyncBackend.sln:/src/WanderSyncBackend.sln
     ports:
       - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
     profiles: ["dev"]
     restart: unless-stopped
 
   backend-prod:
     container_name: wander-backend-prod
     build:
-      context: ./WanderSyncBackend/WanderSync.Api
+      context: ./WanderSyncBackend
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
     profiles: ["prod"]
     restart: unless-stopped
 
@@ -76,6 +84,7 @@ services:
       - NODE_ENV=production
     profiles: ["prod"]
     restart: unless-stopped
+
 
 #docker-compose --profile dev up --build
 #docker-compose --profile prod up --build

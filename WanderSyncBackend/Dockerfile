@@ -1,14 +1,14 @@
 # --- Stage 1: Build ---
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /app
 
-# copy project files for restore layer-caching
-COPY *.sln ./
+COPY WanderSync.sln ./
 COPY WanderSync.*/*.csproj ./WanderSync.*/
+
 RUN dotnet restore
-# now copy source
+
 COPY . .
-RUN dotnet publish -c Release -o /out
+RUN dotnet publish WanderSync.Api/WanderSync.Api.csproj -c Release -o /out
 
 # --- Stage 2: Runtime ---
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
