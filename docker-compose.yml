@@ -20,7 +20,7 @@
       context: ./python-analytics
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8001:8000"
     profiles: ["prod"]
     restart: unless-stopped
 
@@ -50,7 +50,7 @@
       context: ./WanderSyncBackend
       dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
