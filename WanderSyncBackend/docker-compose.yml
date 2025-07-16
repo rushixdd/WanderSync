@@ -1,0 +1,34 @@
+services:
+  # --- C# Backend: Development Profile ---
+  csharp-backend-dev:
+    container_name: wander-csharp-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./WanderSync.Api:/src/WanderSync.Api
+      - ./WanderSync.Application:/src/WanderSync.Application
+      - ./WanderSync.Domain:/src/WanderSync.Domain
+      - ./WanderSync.Infrastructure:/src/WanderSync.Infrastructure
+      - ./WanderSyncBackend.sln:/src/WanderSyncBackend.sln
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+    profiles: [dev]
+    restart: unless-stopped
+
+  # --- C# Backend: Production Profile ---
+  csharp-backend-prod:
+    container_name: wander-csharp-prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"  # Host:Container
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+    profiles: [prod]
+    restart: unless-stopped

@@ -1,0 +1,90 @@
+﻿services:
+  # === Python Analytics Service ===
+  analytics-dev:
+    container_name: wander-analytics-dev
+    build:
+      context: ./python-analytics
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./python-analytics:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    profiles: ["dev"]
+    restart: unless-stopped
+
+  analytics-prod:
+    container_name: wander-analytics-prod
+    build:
+      context: ./python-analytics
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"
+    profiles: ["prod"]
+    restart: unless-stopped
+
+  # === C# Backend API ===
+  backend-dev:
+    container_name: wander-backend-dev
+    build:
+      context: ./WanderSyncBackend         
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./WanderSyncBackend/WanderSync.Api:/src/WanderSync.Api
+      - ./WanderSyncBackend/WanderSync.Application:/src/WanderSync.Application
+      - ./WanderSyncBackend/WanderSync.Domain:/src/WanderSync.Domain
+      - ./WanderSyncBackend/WanderSync.Infrastructure:/src/WanderSync.Infrastructure
+      - ./WanderSyncBackend/WanderSyncBackend.sln:/src/WanderSyncBackend.sln
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+    profiles: ["dev"]
+    restart: unless-stopped
+
+  backend-prod:
+    container_name: wander-backend-prod
+    build:
+      context: ./WanderSyncBackend
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+    profiles: ["prod"]
+    restart: unless-stopped
+
+  # === Frontend ===
+  frontend-dev:
+    container_name: wander-frontend-dev
+    build:
+      context: ./wander-sync-frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./wander-sync-frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:5173"
+    environment:
+      - NODE_ENV=development
+    profiles: ["dev"]
+    restart: unless-stopped
+
+  frontend-prod:
+    container_name: wander-frontend-prod
+    build:
+      context: ./wander-sync-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    profiles: ["prod"]
+    restart: unless-stopped
+
+
+#docker-compose --profile dev up --build
+#docker-compose --profile prod up --build
