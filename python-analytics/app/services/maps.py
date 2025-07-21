@@ -1,14 +1,19 @@
+# app/services/maps.py
 import folium
 from folium.plugins import TimestampedGeoJson
 from typing import List, Dict
 import os
+from datetime import datetime, timedelta
 
+# generate_animated_map function does not need changes
 def generate_animated_map(person_a: List[Dict], person_b: List[Dict], output_path: str):
     if not person_a and not person_b:
-        print("No data available to generate map.")
+        print("No data available to generate animated map.")
         return
 
-    m = folium.Map(location=[person_a[0]['latitude'], person_a[0]['longitude']], zoom_start=15)
+    # To prevent errors if one list is empty
+    start_location = person_a[0] if person_a else person_b[0]
+    m = folium.Map(location=[start_location['latitude'], start_location['longitude']], zoom_start=15)
 
     def format_geojson(points: List[Dict], color: str, label: str):
         features = []
@@ -30,6 +35,11 @@ def generate_animated_map(person_a: List[Dict], person_b: List[Dict], output_pat
 
     all_features = format_geojson(person_a, "red", "Person A") + format_geojson(person_b, "blue", "Person B")
 
+    if not all_features:
+        print("No features to add to animated map.")
+        m.save(output_path)
+        return
+
     TimestampedGeoJson({
         "type": "FeatureCollection",
         "features": all_features
@@ -45,42 +55,53 @@ def generate_animated_map(person_a: List[Dict], person_b: List[Dict], output_pat
     m.save(output_path)
     print(f"\n🎞️  Animated map saved to {output_path}")
 
-def generate_shared_map(person_a: List[Dict], person_b: List[Dict], matches: List[Dict], output_path: str):
-    if not person_a or not person_b:
+# --- THIS FUNCTION IS NOW UPDATED ---
+def generate_shared_map(person_a: List[Dict], person_b: List[Dict], moments: List[Dict], output_path: str):
+    if not person_a and not person_b:
         print("Missing data for one or both persons.")
         return
 
-    # Center map on first point from A
-    m = folium.Map(location=(person_a[0]['latitude'], person_a[0]['longitude']), zoom_start=15)
+    # Center map on first point from A or B
+    start_location = person_a[0] if person_a else person_b[0]
+    m = folium.Map(location=(start_location['latitude'], start_location['longitude']), zoom_start=15)
 
     # Draw person A path
-    folium.PolyLine(
-        [(p['latitude'], p['longitude']) for p in person_a],
-        color='red', weight=2.5, opacity=0.8,
-        tooltip="Person A route"
-    ).add_to(m)
+    if person_a:
+        folium.PolyLine(
+            [(p['latitude'], p['longitude']) for p in person_a],
+            color='red', weight=2.5, opacity=0.8,
+            tooltip="Person A route"
+        ).add_to(m)
 
     # Draw person B path
-    folium.PolyLine(
-        [(p['latitude'], p['longitude']) for p in person_b],
-        color='blue', weight=2.5, opacity=0.8,
-        tooltip="Person B route"
-    ).add_to(m)
+    if person_b:
+        folium.PolyLine(
+            [(p['latitude'], p['longitude']) for p in person_b],
+            color='blue', weight=2.5, opacity=0.8,
+            tooltip="Person B route"
+        ).add_to(m)
 
-    # Mark proximity matches
-    for match in matches:
-        lat, lon = None, None
-        for p in person_a:
-            if p['timestamp'].isoformat() == match['person_a_time']:
-                lat = p['latitude']
-                lon = p['longitude']
-                break
-        if lat:
-            folium.Marker(
-                location=(lat, lon),
-                popup=f"{match['distance_m']}m\nA: {match['person_a_time']}\nB: {match['person_b_time']}",
-                icon=folium.Icon(color='green', icon='users')
-            ).add_to(m)
+    # --- UPDATED LOGIC: Mark clustered moments ---
+    for i, moment in enumerate(moments):
+        # Use the location coordinates from the moment object
+        lat, lon = moment['location_coords']
+        
+        # Create informative popup text from the moment data
+        duration_min = round(moment['duration_seconds'] / 60)
+        start_time = datetime.fromisoformat(moment['start_time_utc']).strftime('%H:%M')
+        
+        popup_html = f"""
+        <b>Moment {i+1}</b><br>
+        Time: {start_time}<br>
+        Duration: {duration_min} min<br>
+        Avg Distance: {moment['average_distance_meters']}m
+        """
+        
+        folium.Marker(
+            location=(lat, lon),
+            popup=popup_html,
+            icon=folium.Icon(color='purple', icon='users', prefix='fa')
+        ).add_to(m)
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     m.save(output_path)

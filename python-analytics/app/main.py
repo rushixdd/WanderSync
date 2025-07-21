@@ -3,7 +3,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers.analyze import router as analyze_proximity
 from app.routers.monitoring import router as monitoring_router
+from dotenv import load_dotenv # Import
+from pathlib import Path
+
 import os
+env_path = Path('.') / '.env'
+load_dotenv(dotenv_path=env_path)
 
 app = FastAPI(
     title="WanderSync Analytics Microservice",

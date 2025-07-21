@@ -1,38 +1,39 @@
 from typing import List, Dict
-from datetime import datetime
+import statistics
 
-def calculate_relationship_insight(matches: List[Dict]) -> Dict:
-    if not matches:
+def calculate_relationship_insight(moments: List[Dict]) -> Dict:
+    if not moments:
         return {
-            "score": 0,
-            "summary": "No encounters detected."
+            "connection_score": 0,
+            "title": "Separate Journeys",
+            "narrative": "No significant moments of proximity were found on this day."
         }
 
-    total_distance = 0
-    time_differences = []
-    for m in matches:
-        total_distance += m["distance_m"]
-        t_diff = abs(
-            (datetime.fromisoformat(m["person_a_time"]) - datetime.fromisoformat(m["person_b_time"])).total_seconds()
-        )
-        time_differences.append(t_diff)
+    num_moments = len(moments)
+    total_duration_seconds = sum(m["duration_seconds"] for m in moments)
+    avg_min_distance = statistics.mean(m["min_distance_meters"] for m in moments)
+    total_duration_minutes = total_duration_seconds / 60
 
-    avg_distance = total_distance / len(matches)
-    avg_time_diff = sum(time_differences) / len(matches)
+    # Scoring Logic
+    proximity_score = max(0, 100 - (avg_min_distance * 2))
+    duration_score = min(100, (total_duration_minutes / 180) * 100)
+    moments_score = min(100, num_moments * 20)
 
-    # Example scoring logic
-    proximity_score = max(0, 100 - avg_distance)              # closer avg = higher score
-    timing_score = max(0, 100 - (avg_time_diff / 60))         # closer in time = higher score
-    encounter_score = min(100, len(matches) * 10)             # more encounters = better
-
-    final_score = round((proximity_score * 0.4 + timing_score * 0.3 + encounter_score * 0.3), 2)
+    # Final Weighted Score
+    final_score = round((proximity_score * 0.4) + (duration_score * 0.4) + (moments_score * 0.2), 2)
+    
+    # Narrative Generation
+    if final_score > 80:
+        title = "A Day of Strong Connection"
+    elif final_score > 50:
+        title = "A Day of Crossing Paths"
+    else:
+        title = "Two Largely Separate Journeys"
+        
+    narrative = f"You shared {num_moments} key moment(s) for a total of {round(total_duration_minutes)} minutes."
 
     return {
-        "score": final_score,
-        "details": {
-            "avg_distance_m": round(avg_distance, 2),
-            "avg_time_difference_sec": round(avg_time_diff, 2),
-            "encounter_count": len(matches)
-        },
-        "summary": "Higher scores suggest stronger proximity alignment on the selected day."
+        "connection_score": final_score,
+        "title": title,
+        "narrative": narrative
     }

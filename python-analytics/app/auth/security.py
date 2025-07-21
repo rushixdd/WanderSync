@@ -1,15 +1,22 @@
-# app/auth/api_key.py
-from fastapi import Header, HTTPException, status
-import os
+from fastapi import Security, HTTPException, status
+from fastapi.security import APIKeyHeader
+import os # Import os
 
-# API_KEY = os.getenv("WANDERSYNC_API_KEY", "your-very-secret-key")
-API_KEY = "your-very-secret-key"
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=True)
 
-async def verify_api_key(x_api_key: str = Header(...)):
-    if x_api_key != API_KEY:
+# Read the allowed API key from environment variables
+# ALLOWED_API_KEY = os.getenv("ALLOWED_API_KEY")
+ALLOWED_API_KEY = "your-very-secret-key"
+
+async def verify_api_key(api_key: str = Security(api_key_header)):
+    if not ALLOWED_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="API key not configured on server."
+        )
+    if api_key != ALLOWED_API_KEY:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing API Key"
+            detail="Invalid API Key"
         )
-# This function can be used as a dependency in your routes to enforce API key validation.
-# Example usage in a route:
