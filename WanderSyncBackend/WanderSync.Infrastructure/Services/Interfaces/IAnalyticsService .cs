@@ -1,5 +1,3 @@
-using System.Net.Http;
-using System.Threading.Tasks;
 using WanderSync.Application.DTOs;
 
 namespace WanderSync.Infrastructure.Services.Interfaces
