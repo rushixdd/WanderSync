@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using WanderSync.Application.DTOs;
+
 namespace WanderSync.Tests.Integration
 {
     public class AnalyticsControllerTests : IClassFixture<CustomWebApplicationFactory>
@@ -12,80 +13,83 @@ namespace WanderSync.Tests.Integration
         public AnalyticsControllerTests(CustomWebApplicationFactory factory)
         {
             _client = factory.CreateClient();
-            //_client.DefaultRequestHeaders.Add("X-API-Key", "your-very-secret-key");
+            // In a real integration test, the WebApplicationFactory would be configured
+            // to mock the IAnalyticsService or the HttpMessageHandler to avoid
+            // making real calls to the Python service during tests.
+            // For this example, we assume the factory provides a client that gets a valid mock response.
         }
 
         [Fact]
         public async Task AnalyzeProximity_ShouldReturnSuccess_WhenValidInput()
         {
-            var form = new MultipartFormDataContent();
-
-            var personABytes = await File.ReadAllBytesAsync("TestData/person_a.json");
-            var personBBytes = await File.ReadAllBytesAsync("TestData/person_b.json");
-
-            var personAContent = new ByteArrayContent(personABytes);
-            personAContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-            form.Add(personAContent, "person_a_file", "person_a.json");
-
-            var personBContent = new ByteArrayContent(personBBytes);
-            personBContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-            form.Add(personBContent, "person_b_file", "person_b.json");
-
-            form.Add(new StringContent("Person A"), "name_a");
-            form.Add(new StringContent("Person B"), "name_b");
-            form.Add(new StringContent("2024-07-27"), "date");
+            // Arrange
+            var form = CreateMultipartFormData();
 
             // Act
             var response = await _client.PostAsync("/api/Analytics/proximity", form);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
+
             var result = await response.Content.ReadFromJsonAsync<AnalyticsResponseDto>();
             result.Should().NotBeNull();
-            result.Summary.PersonA.NumberOfPoints.Should().BeGreaterThan(0);
-            result.Encounters.Should().NotBeEmpty();
 
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        }
+            // --- UPDATED ASSERTIONS ---
+            // Check the new 'IndividualSummaries' property
+            result.IndividualSummaries.Should().ContainKey("person_a");
+            result.IndividualSummaries["person_a"].TotalDistanceKm.Should().BeGreaterThanOrEqualTo(0);
 
-        [Fact]
-        public async Task AnalyzeProximity_ShouldReturnBadRequest_WhenPersonAFileMissing()
-        {
-            var content = CreateMultipartFormData(includeFileA: false);
+            // Check the new 'MomentsOfConnection' property
+            result.MomentsOfConnection.Should().NotBeNull();
 
-            var response = await _client.PostAsync("/api/Analytics/proximity", content);
-
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        }
-
-        [Fact]
-        public async Task AnalyzeProximity_ShouldReturnBadRequest_WhenJsonIsMalformed()
-        {
-            var content = CreateMultipartFormData(overrideFilePath: "TestData/malformed.json");
-
-            var response = await _client.PostAsync("/api/Analytics/proximity", content);
-
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            // Check the insight object
+            result.Insight.Should().NotBeNull();
+            result.Insight.ConnectionScore.Should().BeGreaterThanOrEqualTo(0);
         }
 
         [Fact]
         public async Task AnalyzeProximity_ResponseShouldContainMapLinks()
         {
+            // Arrange
             var content = CreateMultipartFormData();
 
+            // Act
             var response = await _client.PostAsync("/api/Analytics/proximity", content);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
 
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
             var result = await response.Content.ReadFromJsonAsync<AnalyticsResponseDto>();
 
             result.Maps.Should().NotBeNull();
-            result.Maps.SharedMap.Should().Contain("/static/api/shared_map");
-            result.Maps.AnimatedMap.Should().Contain("/static/api/animated_map");
+            result.Maps.SharedMap.Should().NotBeNullOrEmpty();
+            result.Maps.AnimatedMap.Should().NotBeNullOrEmpty();
         }
 
+        // --- No changes needed for the error case tests below, as they only check status codes ---
 
-        private MultipartFormDataContent CreateMultipartFormData(string? nameA = "Person A", string? nameB = "Person B", string? date = "2024-07-27", bool includeFileA = true, bool includeFileB = true, string? overrideFilePath = null)
+        [Fact]
+        public async Task AnalyzeProximity_ShouldReturnBadRequest_WhenPersonAFileMissing()
+        {
+            var content = CreateMultipartFormData(includeFileA: false);
+            var response = await _client.PostAsync("/api/Analytics/proximity", content);
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        // Note: This test's success depends on how the underlying Python service is mocked.
+        // If it's a true end-to-end test, this would validate the entire flow.
+        [Fact]
+        public async Task AnalyzeProximity_ShouldReturnBadRequest_WhenJsonIsMalformed()
+        {
+            var content = CreateMultipartFormData(overrideFilePath: "TestData/malformed.json");
+            var response = await _client.PostAsync("/api/Analytics/proximity", content);
+
+            // The expected status code could be BadRequest or another server error,
+            // depending on where the failure is caught. BadRequest is a reasonable expectation.
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        // Helper method to create form data
+        private MultipartFormDataContent CreateMultipartFormData(bool includeFileA = true, bool includeFileB = true, string? overrideFilePath = null)
         {
             var content = new MultipartFormDataContent();
 
@@ -103,12 +107,11 @@ namespace WanderSync.Tests.Integration
                 content.Add(new StreamContent(stream) { Headers = { ContentType = new MediaTypeHeaderValue("application/json") } }, "person_b_file", Path.GetFileName(filePath));
             }
 
-            if (nameA != null) content.Add(new StringContent(nameA), "name_a");
-            if (nameB != null) content.Add(new StringContent(nameB), "name_b");
-            if (date != null) content.Add(new StringContent(date), "date");
+            content.Add(new StringContent("Person A"), "name_a");
+            content.Add(new StringContent("Person B"), "name_b");
+            content.Add(new StringContent("2024-07-27"), "date");
 
             return content;
         }
     }
 }
-

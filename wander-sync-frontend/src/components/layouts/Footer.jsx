@@ -3,7 +3,7 @@ import React from 'react';
 // Footer component: Displays copyright information and links.
 const Footer = () => {
     return (
-        <footer className="bg-gray-800 text-gray-300 py-8 text-center">
+        <footer className="bg-gray-800 text-gray-300 py-8 text-center w-full">
             <div className="container mx-auto px-4">
                 {/* Optional GitHub link */}
                 <div className="mb-4">
