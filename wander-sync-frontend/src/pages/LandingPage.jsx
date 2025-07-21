@@ -1,31 +1,26 @@
 // src/pages/LandingPage.jsx
 import React, { useRef, useReducer, useCallback } from 'react';
 import HeroSection from '../components/sections/HeroSection.jsx';
-import UploadSection from '../components/sections/UploadSection.jsx'; // Your provided UploadSection
+import UploadSection from '../components/sections/UploadSection.jsx';
 import HowItWorksSection from '../components/sections/HowItWorksSection';
 import FeaturesSection from '../components/sections/FeaturesSection';
 import PrivacySection from '../components/sections/PrivacySection';
-import ProximityResultsSection from '../components/sections/ProximityResultsSection'; // Import the new results component
+import ProximityResultsSection from '../components/sections/ProximityResultsSection';
 import Footer from '../components/layouts/Footer.jsx';
 import NavigationBar from '../components/layouts/NavigationBar';
-import { onAnalyze } from '../services/proximityService'; // Import the service function
+import { onAnalyze } from '../services/proximityService';
 
 // LandingPage component: Orchestrates the main sections of the landing page.
 export default function LandingPage() {
-    // Refs for scrolling to specific sections organized into a single object
+    // Refs for scrolling to specific sections
     const sectionRefs = {
         upload: useRef(null),
-        howItWorks: useRef(null),
-        features: useRef(null),
-        privacy: useRef(null),
         results: useRef(null)
     };
 
     // Reducer for managing analysis state
     const initialState = {
         analysisResults: null,
-        personAName: '',
-        personBName: '',
         loading: false,
         error: null
     };
@@ -37,17 +32,13 @@ export default function LandingPage() {
                     ...state,
                     loading: true,
                     error: null,
-                    analysisResults: null,
-                    personAName: '',
-                    personBName: ''
+                    analysisResults: null
                 };
             case 'ANALYSIS_SUCCESS':
                 return {
                     ...state,
                     loading: false,
-                    analysisResults: action.payload.results,
-                    personAName: action.payload.personAName,
-                    personBName: action.payload.personBName
+                    analysisResults: action.payload,
                 };
             case 'ANALYSIS_ERROR':
                 return {
@@ -61,45 +52,43 @@ export default function LandingPage() {
     };
 
     const [state, dispatch] = useReducer(analysisReducer, initialState);
-    const { analysisResults, personAName, personBName, loading, error } = state;
+    const { analysisResults, loading, error } = state;
 
-    // Function to smoothly scroll to any ref
+    // Function to smoothly scroll to a section
     const scrollToSection = useCallback((ref) => {
         if (ref.current) {
             ref.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, []);
 
-    // This is the function passed to UploadSection's onAnalyze prop
-    const handleAnalyze = useCallback(async ({ person_a_file, person_b_file, name_a, name_b, date }) => {
+    // Function passed to UploadSection to trigger analysis
+    const handleAnalyze = useCallback(async (formData) => {
         dispatch({ type: 'START_ANALYSIS' });
 
         try {
             const data = await onAnalyze(
-                person_a_file,
-                person_b_file,
-                name_a,
-                name_b,
-                date
+                formData.person_a_file,
+                formData.person_b_file,
+                formData.name_a,
+                formData.name_b,
+                formData.date
             );
-            console.log("Backend analysis results:", data);
-            
-            dispatch({
-                type: 'ANALYSIS_SUCCESS',
-                payload: {
-                    results: data,
-                    personAName: name_a,
-                    personBName: name_b
-                }
-            });
-            
-            // Scroll to the results section after successful analysis
-            scrollToSection(sectionRefs.results);
+
+            dispatch({ type: 'ANALYSIS_SUCCESS', payload: data });
+
+            // Scroll to the results after a short delay to allow rendering
+            setTimeout(() => scrollToSection(sectionRefs.results), 100);
+
         } catch (error) {
-            console.error("Backend analysis failed:", error);
-            const errorMessage = error.message || "An unexpected error occurred during analysis.";
+            const errorMessage = error.message || "An unexpected error occurred.";
             dispatch({ type: 'ANALYSIS_ERROR', payload: errorMessage });
         }
+    }, [scrollToSection]);
+
+    // Function passed to ResultsSection to start a new analysis
+    const handleAnalyzeAnother = useCallback(() => {
+        dispatch({ type: 'START_ANALYSIS' }); // This will clear the results
+        scrollToSection(sectionRefs.upload); // Scroll back to the upload form
     }, [scrollToSection]);
 
     return (
@@ -108,7 +97,6 @@ export default function LandingPage() {
             <main className="flex-grow w-full">
                 <HeroSection scrollToRef={sectionRefs.upload} />
 
-                {/* Pass handleAnalyze and loading state to UploadSection */}
                 <UploadSection onAnalyze={handleAnalyze} ref={sectionRefs.upload} loading={loading} />
 
                 {/* Loading indicator */}
@@ -122,13 +110,12 @@ export default function LandingPage() {
                 {/* Display backend errors */}
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-auto max-w-4xl mb-6" role="alert">
-                        <strong className="font-bold">Error!</strong>
-                        <span className="block sm:inline"> {error}</span>
-                        <button 
+                        <strong className="font-bold">Analysis Error!</strong>
+                        <span className="block sm:inline ml-2">{error}</span>
+                        <button
                             className="absolute top-0 right-0 px-4 py-3"
                             onClick={() => dispatch({ type: 'ANALYSIS_ERROR', payload: null })}
                         >
-                            <span className="sr-only">Close</span>
                             <span className="text-xl">&times;</span>
                         </button>
                     </div>
@@ -139,14 +126,13 @@ export default function LandingPage() {
                     <ProximityResultsSection
                         ref={sectionRefs.results}
                         results={analysisResults}
-                        personAName={personAName}
-                        personBName={personBName}
+                        onAnalyzeAnother={handleAnalyzeAnother}
                     />
                 )}
 
-                <HowItWorksSection ref={sectionRefs.howItWorks} />
-                <FeaturesSection ref={sectionRefs.features} />
-                <PrivacySection ref={sectionRefs.privacy} />
+                <HowItWorksSection />
+                <FeaturesSection />
+                <PrivacySection />
             </main>
             <Footer />
         </div>
